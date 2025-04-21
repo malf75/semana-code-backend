@@ -1,0 +1,28 @@
+import uuid
+from sqlmodel import SQLModel, Field, Relationship
+from sqlalchemy.orm import relationship
+from datetime import datetime
+from typing import Optional, List
+
+class Enquete(SQLModel, table=True):
+    __tablename__ = 'enquetes'
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4,primary_key=True)
+    pergunta: str = Field(max_length=200)
+    status: str = Field(max_length=40)
+    data_inicio: Optional[datetime] = Field(default_factory=datetime.now)
+    data_fim: datetime = Field()
+
+    opcoes: List["Opcao"] = Relationship(
+        back_populates="enquetes",
+        sa_relationship=relationship("opcoes", back_populates="enquetes", cascade="all, delete-orphan")
+    )
+
+class Opcao(SQLModel, table=True):
+    __tablename__ = 'opcoes'
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4,primary_key=True)
+    enquete_id: uuid.UUID = Field(foreign_key="enquetes.id")
+    enquete: Optional[Enquete] = Relationship(back_populates="opcoes")
+    descricao: str = Field(max_length=50)
+    votos: int = Field()
