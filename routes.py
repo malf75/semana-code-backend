@@ -2,6 +2,13 @@ import uvicorn
 import os
 from setup.settings import app
 from fastapi.responses import RedirectResponse
+from fastapi import Depends
+from sqlmodel import Session, SQLModel
+from database.database import get_db, engine
+from typing import Annotated
+
+db = Annotated[Session, Depends(get_db)]
+SQLModel.metadata.create_all(engine)
 
 @app.get("/")
 def redirect_index():

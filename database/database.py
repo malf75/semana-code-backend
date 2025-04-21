@@ -1,5 +1,6 @@
 from sqlmodel import create_engine, Session
 from setup.settings import DATABASE_URL
+import database.models
 
 engine = create_engine(f"{DATABASE_URL}", echo=True)
 
