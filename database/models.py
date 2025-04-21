@@ -14,8 +14,8 @@ class Enquete(SQLModel, table=True):
     data_fim: datetime = Field()
 
     opcoes: List["Opcao"] = Relationship(
-        back_populates="enquetes",
-        sa_relationship=relationship("opcoes", back_populates="enquetes", cascade="all, delete-orphan")
+        back_populates="enquete",
+        sa_relationship=relationship("Opcao", back_populates="enquete", cascade="all, delete-orphan")
     )
 
 class Opcao(SQLModel, table=True):
