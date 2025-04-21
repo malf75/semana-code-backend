@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, conlist
 from datetime import datetime
 from typing import Optional
 
@@ -8,4 +8,4 @@ class CriaEnqueteRequest(BaseModel):
     data_fim: datetime
 
 class CriaOpcoesRequest(BaseModel):
-    opcoes: list[dict[str, str]] = [{}]
+    opcoes: conlist(dict[str, str], min_length=3)
