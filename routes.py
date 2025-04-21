@@ -1,4 +1,5 @@
 import uvicorn
+import os
 from setup.settings import app
 from fastapi.responses import RedirectResponse
 
