@@ -26,6 +26,11 @@ async def rota_edita_enquetes(id: str, enquete_request: EditaEnqueteRequest, opc
     enquete = await edita_enquete(id, enquete_request.pergunta, enquete_request.data_inicio, enquete_request.data_fim, enquete_request.status, opcao_request, db)
     return enquete
 
+@app.delete("/enquetes")
+async def rota_deleta_enquetes(id: str, db: Session = Depends(get_db)):
+    enquete = await deleta_enquete(id, db)
+    return enquete
+
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
     uvicorn.run(app, host="0.0.0.0", port=port)
