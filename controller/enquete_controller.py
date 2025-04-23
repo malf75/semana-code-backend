@@ -1,17 +1,17 @@
 from sqlalchemy.orm import joinedload
 from sqlmodel import select
-from sqlalchemy import or_
-from database.models import Enquete, Opcao
+from database.models import Enquete, Opcao, EnqueteRead
 from fastapi import HTTPException
 from starlette import status
 from fastapi.responses import JSONResponse
 from datetime import datetime, timezone
+from infrastructure.broadcaster import broadcaster
 
 async def cria_enquete(pergunta, data_inicio, data_fim, opcoes, db):
     try:
-        status_enquete = "iniciado"
+        status_enquete = "iniciada"
         if data_inicio > datetime.now(timezone.utc):
-            status_enquete = "não iniciado"
+            status_enquete = "não iniciada"
         objeto_enquete = Enquete(
             pergunta=pergunta,
             status=status_enquete,
@@ -85,3 +85,33 @@ async def retorna_enquete(status_enquete, db):
         return objetos
     except Exception as e:
         return HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Erro ao listar enquetes: {e}")
+
+async def retorna_enquete_por_id(id, db):
+    try:
+        query = select(Enquete).where(Enquete.id == id).options(joinedload(Enquete.opcoes))
+        objetos = db.exec(query).unique().first()
+        return objetos
+    except Exception as e:
+        return HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Erro ao listar enquetes: {e}")
+
+async def vota_opcao(id, db):
+    try:
+        query = select(Opcao).where(Opcao.id == id)
+        objeto_opcao = db.exec(query).first()
+        enquete = await retorna_enquete_por_id(objeto_opcao.enquete_id, db)
+        if enquete.status == "não iniciada":
+            return HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Enquete não iniciada!")
+        if enquete.data_fim <= datetime.now():
+            enquete.status = "finalizada"
+            db.commit()
+            return HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Enquete finalizada!")
+        objeto_opcao.votos += 1
+        enquete.status = "em andamento"
+        db.commit()
+        db.refresh(objeto_opcao)
+
+        enquete_validada = EnqueteRead.model_validate(enquete)
+        await broadcaster.broadcast([enquete_validada.model_dump(mode="json")])
+        return JSONResponse(status_code=status.HTTP_200_OK, content="Voto registrado com sucesso!")
+    except Exception as e:
+        return HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Erro ao votar na opção: {e}")
