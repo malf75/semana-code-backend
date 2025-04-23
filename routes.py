@@ -39,7 +39,7 @@ async def rota_retorna_enquetes(status: Optional[str] = None, db: Session = Depe
     enquete = await retorna_enquete(status, db)
     return enquete
 
-@app.put("/voto")
+@app.patch("/voto")
 async def rota_vota_opcao(id: str, db: Session = Depends(get_db)):
     enquete = await vota_opcao(id, db)
     return enquete
