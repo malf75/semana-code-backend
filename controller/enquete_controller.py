@@ -62,3 +62,16 @@ async def edita_enquete(id, pergunta, data_inicio, data_fim, status_enquete, opc
         return JSONResponse(status_code=status.HTTP_200_OK, content="Enquete editada com sucesso!")
     except Exception as e:
         return HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Erro ao editar enquete: {e}")
+
+async def deleta_enquete(id, db):
+    try:
+        objeto_enquete = db.exec(select(Enquete).where(Enquete.id == id)).first()
+        objeto_opcoes = db.exec(select(Opcao).where(Opcao.enquete_id == id)).all()
+        db.delete(objeto_enquete)
+        for objeto in objeto_opcoes:
+            db.delete(objeto)
+        db.commit()
+        return JSONResponse(status_code=status.HTTP_200_OK, content="Enquete deletada com sucesso!")
+    except Exception as e:
+        return HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Erro ao deletar enquete: {e}")
+
