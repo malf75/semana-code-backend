@@ -30,3 +30,35 @@ async def cria_enquete(pergunta, data_inicio, data_fim, opcoes, db):
         return JSONResponse(status_code=status.HTTP_201_CREATED, content="Enquete Criada!")
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Erro ao criar enquete! {e}")
+
+async def edita_enquete(id, pergunta, data_inicio, data_fim, status_enquete, opcoes, db):
+    try:
+        if pergunta or data_inicio or data_fim:
+            query = select(Enquete).where(Enquete.id == id)
+            objeto_enquete = db.exec(query).first()
+            print(objeto_enquete)
+            if pergunta:
+                objeto_enquete.pergunta = pergunta
+            if data_inicio:
+                objeto_enquete.data_inicio = data_inicio
+            if data_fim:
+                objeto_enquete.data_fim = data_fim
+            if status_enquete:
+                objeto_enquete.status = status_enquete
+        if opcoes:
+            for opcao in opcoes.opcoes:
+                query = select(Opcao).where(Opcao.id == opcao.id)
+                objeto_opcao = db.exec(query).first()
+                if objeto_opcao:
+                    objeto_opcao.descricao = opcao.descricao
+                else:
+                    nova_opcao = Opcao(
+                        enquete_id=id,
+                        descricao=opcao.descricao,
+                        votos=0
+                    )
+                    db.add(nova_opcao)
+        db.commit()
+        return JSONResponse(status_code=status.HTTP_200_OK, content="Enquete editada com sucesso!")
+    except Exception as e:
+        return HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Erro ao editar enquete: {e}")
