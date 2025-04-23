@@ -110,8 +110,9 @@ async def vota_opcao(id, db):
         db.commit()
         db.refresh(objeto_opcao)
 
-        enquete_validada = EnqueteRead.model_validate(enquete)
-        await broadcaster.broadcast([enquete_validada.model_dump(mode="json")])
+        todas_enquetes_atualizadas = await retorna_enquete(None, db)
+        enquetes_serializadas = [EnqueteRead.model_validate(e).model_dump(mode="json") for e in todas_enquetes_atualizadas]
+        await broadcaster.broadcast(enquetes_serializadas)
         return JSONResponse(status_code=status.HTTP_200_OK, content="Voto registrado com sucesso!")
     except Exception as e:
         return HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Erro ao votar na opção: {e}")
