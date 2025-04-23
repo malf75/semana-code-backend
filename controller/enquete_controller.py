@@ -1,3 +1,4 @@
+from sqlalchemy.orm import joinedload
 from sqlmodel import select
 from sqlalchemy import or_
 from database.models import Enquete, Opcao
@@ -21,7 +22,7 @@ async def cria_enquete(pergunta, data_inicio, data_fim, opcoes, db):
             print(opcao)
             objeto_opcao = Opcao(
                 enquete_id=objeto_enquete.id,
-                descricao=opcao["descricao"],
+                descricao=opcao.descricao,
                 votos=0
             )
             db.add(objeto_opcao)
@@ -75,3 +76,12 @@ async def deleta_enquete(id, db):
     except Exception as e:
         return HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Erro ao deletar enquete: {e}")
 
+async def retorna_enquete(status_enquete, db):
+    try:
+        query = select(Enquete).options(joinedload(Enquete.opcoes))
+        if status_enquete:
+            query = query.where(Enquete.status == status_enquete)
+        objetos = db.exec(query).unique().all()
+        return objetos
+    except Exception as e:
+        return HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Erro ao listar enquetes: {e}")

@@ -5,7 +5,8 @@ from fastapi.responses import RedirectResponse
 from fastapi import Depends
 from sqlmodel import Session, SQLModel
 from database.database import get_db, engine
-from typing import Annotated
+from database.models import EnqueteRead
+from typing import Annotated, List
 from requests.enquete_requests import *
 from controller.enquete_controller import *
 
@@ -29,6 +30,11 @@ async def rota_edita_enquetes(id: str, enquete_request: EditaEnqueteRequest, opc
 @app.delete("/enquetes")
 async def rota_deleta_enquetes(id: str, db: Session = Depends(get_db)):
     enquete = await deleta_enquete(id, db)
+    return enquete
+
+@app.get("/enquetes", response_model=List[EnqueteRead])
+async def rota_retorna_enquetes(status: Optional[str] = None, db: Session = Depends(get_db)):
+    enquete = await retorna_enquete(status, db)
     return enquete
 
 if __name__ == "__main__":

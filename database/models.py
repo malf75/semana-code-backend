@@ -26,3 +26,19 @@ class Opcao(SQLModel, table=True):
     enquete: Optional[Enquete] = Relationship(back_populates="opcoes")
     descricao: str = Field(max_length=50)
     votos: int = Field()
+
+class OpcaoBase(SQLModel):
+    descricao: str
+    votos: int
+
+class OpcaoRead(OpcaoBase):
+    id: uuid.UUID
+    enquete_id: uuid.UUID
+
+class EnqueteRead(SQLModel):
+    id: uuid.UUID
+    pergunta: str
+    status: str
+    data_inicio: Optional[datetime]
+    data_fim: datetime
+    opcoes: List[OpcaoRead] = []
