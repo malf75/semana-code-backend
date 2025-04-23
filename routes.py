@@ -1,5 +1,6 @@
 import uvicorn
 import os
+from starlette.websockets import WebSocket, WebSocketDisconnect
 from setup.settings import app
 from fastapi.responses import RedirectResponse
 from fastapi import Depends
@@ -9,6 +10,7 @@ from database.models import EnqueteRead
 from typing import Annotated, List
 from requests.enquete_requests import *
 from controller.enquete_controller import *
+from infrastructure.broadcaster import broadcaster
 
 db = Annotated[Session, Depends(get_db)]
 SQLModel.metadata.create_all(engine)
@@ -36,6 +38,22 @@ async def rota_deleta_enquetes(id: str, db: Session = Depends(get_db)):
 async def rota_retorna_enquetes(status: Optional[str] = None, db: Session = Depends(get_db)):
     enquete = await retorna_enquete(status, db)
     return enquete
+
+@app.put("/voto")
+async def rota_vota_opcao(id: str, db: Session = Depends(get_db)):
+    enquete = await vota_opcao(id, db)
+    return enquete
+
+@app.websocket("/ws/enquetes")
+async def websocket_enquetes(websocket: WebSocket):
+    await broadcaster.connect(websocket)
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        print("Cliente desconectado do WebSocket")
+    finally:
+        broadcaster.disconnect(websocket)
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))

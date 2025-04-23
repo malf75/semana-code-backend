@@ -1,6 +1,4 @@
-import uuid
-
-from pydantic import BaseModel, conlist, conset
+from pydantic import BaseModel, conlist
 from datetime import datetime
 from typing import Optional
 
